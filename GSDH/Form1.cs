@@ -53,7 +53,7 @@ namespace GSDH
 
         private void btnRegistro_Click(object sender, EventArgs e)
         {
-            AdicionarUsuario(txtUsuarioR.Text, txtUsuarioSenha.Text, txtConfirmar.Text, txtEmail.Text);
+            AdicionarUsuario(txtUsuarioR.Text, txtSenhaR.Text, txtConfirmar.Text, txtEmail.Text);
 
         }
 
@@ -62,7 +62,7 @@ namespace GSDH
             string usuario = txtUsuarioLogin.Text.Trim();
             string senha = Crypto.sha256encrypt(txtUsuarioSenha.Text.Trim());
             string connectionString = "Data Source=10.125.50.191;Initial Catalog=Logins;User ID=aluno;Password=aluno;";
-            string query = "SELECT COUNT(*) FROM acessos WHERE usuario = @usuario AND senha = @senha";
+            string query = "SELECT COUNT(*) FROM LoginsJV WHERE usuario = @usuario AND senha = @senha";
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
@@ -90,7 +90,16 @@ namespace GSDH
         private void AdicionarUsuario(string _nomeUsuario, string _senha, string _confirmaSenha, string _email)
         {
 
-            Match match = Regex.Match(_email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$");
+            // Regex para validar o email
+            Regex regex = new Regex(@"^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$");
+            Match match = regex.Match(_email);
+
+            //// Verifica se o nome de usuário já existe no banco de dados
+            //if (usu(_nomeUsuario))
+            //{
+            //    MessageBox.Show("O nome do usuário já existe, tente informar outro nome.");
+            //    return;
+            //}
 
             // Confirma a senha
             if (_senha != _confirmaSenha)
@@ -129,6 +138,7 @@ namespace GSDH
                 MessageBox.Show("Obrigado por seu registro!");
             }
         }
+
         private void AdicionaUsuarioNoBD(string _nomeUsuario, string _senha, string _email)
         {
             using (SqlConnection cn = new SqlConnection(connectionString))  // AQUI você passa a connectionString
@@ -139,15 +149,15 @@ namespace GSDH
                     cn.Open();
 
                     // Definindo o comando SQL para inserir o usuário
-                    string sql = "INSERT INTO Acessos (usuario, senha, email) VALUES (@usuario, @senha, @email)";
+                    string sql = "INSERT INTO LoginsJV (usuario, senha, email) VALUES (@usuario, @senha, @email)";
 
                     // Criando o comando SQL com parâmetros
                     using (SqlCommand cmd = new SqlCommand(sql, cn))
                     {
                         // Adicionando os parâmetros
-                        cmd.Parameters.Add(new SqlParameter("@usuario", SqlDbType.NVarChar)).Value = _nomeUsuario;
-                        cmd.Parameters.Add(new SqlParameter("@senha", SqlDbType.NVarChar)).Value = _senha;
-                        cmd.Parameters.Add(new SqlParameter("@email", SqlDbType.NVarChar)).Value = _email;
+                        cmd.Parameters.Add(new SqlParameter("@usuario", SqlDbType.NChar)).Value = _nomeUsuario;
+                        cmd.Parameters.Add(new SqlParameter("@senha", SqlDbType.NChar)).Value = _senha;
+                        cmd.Parameters.Add(new SqlParameter("@email", SqlDbType.NChar)).Value = _email;
 
                         // Executando o comando no banco de dados
                         cmd.ExecuteNonQuery();
@@ -172,9 +182,7 @@ namespace GSDH
                 }
 
             }
-
-
         }
-    }
+        }
 
-}
+    }
